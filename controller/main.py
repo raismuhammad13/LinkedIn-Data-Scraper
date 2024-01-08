@@ -28,7 +28,7 @@ def profile_page_data(driver, profile_page_docs):
     "Job": [],
     "Company Name": [],
     "Email": [],
-    "Country": []
+    "Location": []
     }
     #Fetching the name of the profile
     name_tag = profile_page_docs.find("h1", class_='text-heading-xlarge inline t-24 v-align-middle break-words')
@@ -41,13 +41,16 @@ def profile_page_data(driver, profile_page_docs):
     # print("Profile Title tag line", profile_title_tag.text.strip())
 
     # Fetching the job title of the profile
-    profile_job_tag = profile_page_docs.find("div", class_='display-flex flex-wrap align-items-center full-height')
+    experience_tag = profile_page_docs.find("div",id="experience")
+    exp_next_sibling = experience_tag.find_next_sibling("div", class_="SafROhiVFnTqTArSIixYjnkdUqHqwwetStKc")
+    exp_next_sibling_cont = exp_next_sibling.find_next_sibling("div", class_="pvs-list__outer-container")
+    profile_job_tag = exp_next_sibling_cont.find("div", class_='display-flex flex-wrap align-items-center full-height')
     job = profile_job_tag.find('span', {"aria-hidden":"true"})
     profile_data["Job"].append(job.text.strip())
     # print("Job title", job.text.strip())
 
     # Fetching the name of a company a profile holder working in
-    profile_job_company_tag = profile_page_docs.find("span", class_='t-14 t-normal')
+    profile_job_company_tag = exp_next_sibling_cont.find("span", class_='t-14 t-normal')
     company_name_tag = profile_job_company_tag.find('span', {"aria-hidden": "true"})
     company = company_name_tag.text.strip().split("·")[0]
     profile_data["Company Name"].append(company)
@@ -55,7 +58,7 @@ def profile_page_data(driver, profile_page_docs):
 
     # Fetching the location of profile holder working
     location = profile_page_docs.find('span', class_='text-body-small inline t-black--light break-words')
-    profile_data["Country"].append(location.text.strip())
+    profile_data["Location"].append(location.text.strip())
     # print(location.text.strip())
 
     # Fetching the link for profile info page
@@ -75,8 +78,10 @@ def profile_page_data(driver, profile_page_docs):
         profile_data["Email"].append(None)
         # print(f"email address for {name_tag.text.strip()} does not exists.")
     # print(profile_data)
+    # df = pd.DataFrame(profile_data)
+    # df.to_csv("Data/profile_data.csv", index=False)
     
-    with open("data/linkedInData.csv", mode='a', newline='') as csv_file:
+    with open("C:\\Users\Aridian Technologies\\Desktop\\Office\Desktop\\Data Scrappers\\DataScraper_LinkedInData\\Data\\linkedInData_New2.csv", mode='a', newline='') as csv_file:
         # Create a CSV writer object
         csv_writer = csv.writer(csv_file)
         # If the file is empty, write the header
@@ -102,7 +107,7 @@ def profile_page_docs(driver, profile_links_list):
     profile_page_data(driver, profile_page_docs)
 
 
-def profile_page_lisks(driver, links):
+def profile_page_links(driver, links):
     # Parsing the main page and returing the list of profile links
     print("Getting links from the main page")
     soup = BeautifulSoup(links,'html.parser')
@@ -116,8 +121,9 @@ def profile_page_lisks(driver, links):
 
 
 def main():
-    user = get_settings()["linkedin_logging_credentials"]['user']  # Email Address
-    password = get_settings()["linkedin_logging_credentials"]['password']   # Password
+    user = get_settings()["linkedin_logging_credentials"]['user']    
+    password = get_settings()["linkedin_logging_credentials"]['password']
+    print(user, password)
     # LinkedIn login
     options = webdriver.ChromeOptions()
     service = Service(ChromeDriverManager().install())
@@ -136,14 +142,14 @@ def main():
     time.sleep(2)
 
     # Looping through the pages to get the profile links
-    for page in range(0,5):
+    for page in range(0,2):
         driver.get(f'https://www.linkedin.com/search/results/people/?geoUrn=%5B%22103644278%22%5D&keywords=azure%20data%20engineer&origin=FACETED_SEARCH&page={page+1}&sid=%3A%40O')
         html_content = driver.page_source
         print(f"Processing for page {page+1}")
         time.sleep(10)
 
         # Get a list of Links from the main page
-        profile_page_lisks(driver, html_content)
+        profile_page_links(driver, html_content)
         # Parsing through the main page and return the list of profile pages html as list
 
 if __name__ == "__main__":
